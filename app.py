@@ -17,17 +17,28 @@ def falla_mas_cercana(data, ubicacion_usuario):
     falla_cercana = data.loc[data['distancia'].idxmin()]
     return falla_cercana
 
-# Función para cargar y procesar los datos
-def cargar_datos(ruta, tipo_falla):
+# Función para cargar y procesar los datos, estandarizando nombres de columnas
+def cargar_datos(ruta, tipo_falla, columnas_renombrar):
     data = pd.read_csv(ruta, delimiter=';')
     data[['geo_point_2d_lat', 'geo_point_2d_lon']] = data['geo_point_2d'].str.split(',', expand=True).astype(float)
     data['Tipo Falla'] = tipo_falla
+    data.rename(columns=columnas_renombrar, inplace=True)
     return data
 
+# Diccionarios para renombrar columnas
+columnas_renombrar_adultas = {
+    'Esbós / Lema': 'Esbos',
+    'Anyo Fundació / Año Fundacion': 'Any_Fundacio'
+}
+columnas_renombrar_infantiles = {
+    'Esbós / Boceto': 'Esbos',
+    'Any Fundació / Año Fundacion': 'Any_Fundacio'
+}
+
 # Cargar los datos
-data_fallas_adultas = cargar_datos('falles-fallas.csv', 'Falla Adulta')
-data_fallas_infantiles = cargar_datos("falles-infantils-fallas-infantiles.csv", 'Falla Infantil')
-data_carpas_falleras = cargar_datos("carpes-falles-carpas-fallas.csv", 'Carpa Fallera')
+data_fallas_adultas = cargar_datos('D:/culo/falles-fallas.csv', 'Falla Adulta', columnas_renombrar_adultas)
+data_fallas_infantiles = cargar_datos("D:/culo/falles-infantils-fallas-infantiles.csv", 'Falla Infantil', columnas_renombrar_infantiles)
+data_carpas_falleras = cargar_datos("D:/culo/carpes-falles-carpas-fallas.csv", 'Carpa Fallera', {})
 
 # Unir todas las bases de datos
 data = pd.concat([data_fallas_adultas, data_fallas_infantiles, data_carpas_falleras], ignore_index=True)
@@ -62,6 +73,8 @@ if st.sidebar.button("Buscar Falla Más Cercana"):
             st.session_state['direccion'] = direccion
         else:
             st.error("No se pudo encontrar la ubicación. Por favor, intenta de nuevo.")
+    else:
+        st.error("Por favor, introduce una dirección.")
 
 # Mostrar resultados si hay una falla cercana guardada en session_state
 if 'falla_cercana' in st.session_state:
@@ -84,9 +97,14 @@ if 'falla_cercana' in st.session_state:
             st.write(f"Presidente: {falla_cercana['President / Presidente']}")
             st.write(f"Artista: {falla_cercana['Artiste / Artista']}")
             st.write(f"Lema: {falla_cercana['Lema']}")
-            st.write(f"Año de Fundación: {falla_cercana['Any Fundació / Año Fundacion']}")
+            any_fundacio = falla_cercana['Any_Fundacio']
+            st.write(f"Año de Fundación: {any_fundacio if any_fundacio else 'N/A'}")
             st.write(f"Distintivo: {falla_cercana['Distintiu / Distintivo']}")
-            st.write(f"Esbós: {falla_cercana['Esbós / Boceto']}")
+            esbos_url = falla_cercana['Esbos']
+            if isinstance(esbos_url, str) and esbos_url.startswith("http"):
+                st.image(esbos_url, caption="Esbós / Boceto")
+            else:
+                st.write(f"Esbós: {'N/A' if not esbos_url else esbos_url}")
             st.write(f"Falla Experimental: {falla_cercana['Falla Experimental']}")
 
         # Mostrar mapa con la ubicación
@@ -95,9 +113,22 @@ if 'falla_cercana' in st.session_state:
         folium.Marker([falla_cercana['geo_point_2d_lat'], falla_cercana['geo_point_2d_lon']], popup=falla_cercana['Nom / Nombre']).add_to(m)
         st_folium(m, width=700, height=500)
 
-# Mostrar lista de fallas
-st.header("Lista de Fallas")
-st.dataframe(data_filtrada[['Nom / Nombre', 'geo_point_2d_lat', 'geo_point_2d_lon', 'Tipo Falla']])
+# Mostrar lista de fallas adultas ordenadas por distancia
+if 'ubicacion_usuario' in st.session_state:
+    ubicacion_usuario = st.session_state['ubicacion_usuario']
+    data_fallas_adultas['distancia'] = data_fallas_adultas.apply(lambda row: geodesic(ubicacion_usuario, (row['geo_point_2d_lat'], row['geo_point_2d_lon'])).km, axis=1)
+    data_fallas_adultas = data_fallas_adultas.sort_values(by='distancia')
+
+    # Mostrar las 5 fallas adultas más cercanas en el mapa
+    m = folium.Map(location=ubicacion_usuario, zoom_start=14)
+    folium.Marker([ubicacion_usuario[0], ubicacion_usuario[1]], popup="Tu Ubicación", icon=folium.Icon(color="blue")).add_to(m)
+    for i, row in data_fallas_adultas.head(5).iterrows():
+        folium.Marker([row['geo_point_2d_lat'], row['geo_point_2d_lon']], popup=row['Nom / Nombre'], icon=folium.Icon(color="red")).add_to(m)
+    st_folium(m, width=700, height=500)
+
+    # Mostrar la tabla de fallas adultas ordenadas por distancia
+    st.header("Lista de Fallas Adultas")
+    st.dataframe(data_fallas_adultas[['Nom / Nombre', 'distancia']])
 
 
 
