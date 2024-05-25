@@ -25,9 +25,9 @@ def cargar_datos(ruta, tipo_falla):
     return data
 
 # Cargar los datos
-data_fallas_adultas = cargar_datos('D:/culo/falles-fallas.csv', 'Falla Adulta')
-data_fallas_infantiles = cargar_datos("D:/culo/falles-infantils-fallas-infantiles.csv", 'Falla Infantil')
-data_carpas_falleras = cargar_datos("D:/culo/carpes-falles-carpas-fallas.csv", 'Carpa Fallera')
+data_fallas_adultas = cargar_datos('falles-fallas.csv', 'Falla Adulta')
+data_fallas_infantiles = cargar_datos("falles-infantils-fallas-infantiles.csv", 'Falla Infantil')
+data_carpas_falleras = cargar_datos("carpes-falles-carpas-fallas.csv", 'Carpa Fallera')
 
 # Unir todas las bases de datos
 data = pd.concat([data_fallas_adultas, data_fallas_infantiles, data_carpas_falleras], ignore_index=True)
