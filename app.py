@@ -97,15 +97,15 @@ if 'falla_cercana' in st.session_state:
             st.write(f"Presidente: {falla_cercana['President / Presidente']}")
             st.write(f"Artista: {falla_cercana['Artiste / Artista']}")
             st.write(f"Lema: {falla_cercana['Lema']}")
-            any_fundacio = falla_cercana['Any_Fundacio']
-            st.write(f"Año de Fundación: {any_fundacio if any_fundacio else 'N/A'}")
+            any_fundacio = int(falla_cercana['Any_Fundacio']) if pd.notnull(falla_cercana['Any_Fundacio']) else 'N/A'
+            st.write(f"Año de Fundación: {any_fundacio}")
             st.write(f"Distintivo: {falla_cercana['Distintiu / Distintivo']}")
             esbos_url = falla_cercana['Esbos']
             if isinstance(esbos_url, str) and esbos_url.startswith("http"):
                 st.image(esbos_url, caption="Esbós / Boceto")
             else:
                 st.write(f"Esbós: {'N/A' if not esbos_url else esbos_url}")
-            st.write(f"Falla Experimental: {falla_cercana['Falla Experimental']}")
+            st.write(f"Falla Experimental: {'SI' if falla_cercana['Falla Experimental'] == 1 else 'NO'}")
 
         # Mostrar mapa con la ubicación
         m = folium.Map(location=ubicacion_usuario, zoom_start=14)
@@ -113,22 +113,20 @@ if 'falla_cercana' in st.session_state:
         folium.Marker([falla_cercana['geo_point_2d_lat'], falla_cercana['geo_point_2d_lon']], popup=falla_cercana['Nom / Nombre']).add_to(m)
         st_folium(m, width=700, height=500)
 
-# Mostrar lista de fallas adultas ordenadas por distancia
+# Mostrar lista de fallas ordenadas por distancia según el tipo seleccionado
 if 'ubicacion_usuario' in st.session_state:
     ubicacion_usuario = st.session_state['ubicacion_usuario']
-    data_fallas_adultas['distancia'] = data_fallas_adultas.apply(lambda row: geodesic(ubicacion_usuario, (row['geo_point_2d_lat'], row['geo_point_2d_lon'])).km, axis=1)
-    data_fallas_adultas = data_fallas_adultas.sort_values(by='distancia')
+    data_filtrada['distancia'] = data_filtrada.apply(lambda row: geodesic(ubicacion_usuario, (row['geo_point_2d_lat'], row['geo_point_2d_lon'])).km, axis=1)
+    data_filtrada = data_filtrada.sort_values(by='distancia')
 
-    # Mostrar las 5 fallas adultas más cercanas en el mapa
+    # Mostrar las 5 fallas más cercanas en el mapa
+    st.header(f"Las 5 {tipo_falla_seleccionada.lower()}s más cercanas a ti")
     m = folium.Map(location=ubicacion_usuario, zoom_start=14)
     folium.Marker([ubicacion_usuario[0], ubicacion_usuario[1]], popup="Tu Ubicación", icon=folium.Icon(color="blue")).add_to(m)
-    for i, row in data_fallas_adultas.head(5).iterrows():
+    for i, row in data_filtrada.head(5).iterrows():
         folium.Marker([row['geo_point_2d_lat'], row['geo_point_2d_lon']], popup=row['Nom / Nombre'], icon=folium.Icon(color="red")).add_to(m)
     st_folium(m, width=700, height=500)
 
-    # Mostrar la tabla de fallas adultas ordenadas por distancia
-    st.header("Lista de Fallas Adultas")
-    st.dataframe(data_fallas_adultas[['Nom / Nombre', 'distancia']])
-
-
-
+    # Mostrar la tabla de fallas ordenadas por distancia
+    st.header(f"Lista de {tipo_falla_seleccionada.lower()}s")
+    st.dataframe(data_filtrada[['Nom / Nombre', 'distancia']])
