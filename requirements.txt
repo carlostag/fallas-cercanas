@@ -1,0 +1,6 @@
+streamlit
+pandas
+geodesic
+OpenCageGeocode
+folium
+st_folium
