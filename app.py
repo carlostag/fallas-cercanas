@@ -6,6 +6,7 @@ import folium
 from streamlit_folium import st_folium
 import openrouteservice
 from openrouteservice import convert
+import base64
 
 # Función para encontrar la falla más cercana
 def falla_mas_cercana(data, ubicacion_usuario):
@@ -132,6 +133,9 @@ if st.sidebar.button("Calcular Ruta Turística"):
             st.session_state['ruta_turistica'] = ruta_turistica
             st.session_state['ubicacion_usuario'] = ubicacion_usuario
             st.session_state['direccion'] = direccion
+            # Obtener la ruta con calles reales
+            ruta_geojson = obtener_ruta_con_calles(ruta_turistica, ubicacion_usuario, ors_client)
+            st.session_state['ruta_geojson'] = ruta_geojson
         else:
             st.error("No se pudo encontrar la ubicación. Por favor, intenta de nuevo.")
     else:
@@ -174,15 +178,13 @@ if 'falla_cercana' in st.session_state:
         st_folium(m, width=700, height=500)
 
 # Mostrar la ruta turística si hay una guardada en session_state
-if 'ruta_turistica' in st.session_state:
+if 'ruta_turistica' in st.session_state and 'ruta_geojson' in st.session_state:
     ruta_turistica = st.session_state['ruta_turistica']
+    ruta_geojson = st.session_state['ruta_geojson']
     ubicacion_usuario = st.session_state['ubicacion_usuario']
     with st.expander("Ruta Turística", expanded=True):
         st.write("Fallas en la ruta:")
         st.dataframe(ruta_turistica[['Nom / Nombre', 'distancia_acumulada']])
-        
-        # Obtener la ruta con calles reales
-        ruta_geojson = obtener_ruta_con_calles(ruta_turistica, ubicacion_usuario, ors_client)
         
         # Mostrar mapa con la ruta
         m = folium.Map(location=ubicacion_usuario, zoom_start=14)
@@ -194,7 +196,6 @@ if 'ruta_turistica' in st.session_state:
         folium.GeoJson(ruta_geojson, name='route').add_to(m)
         folium.LayerControl().add_to(m)
         st_folium(m, width=700, height=500)
-        
 
 # Mostrar lista de fallas ordenadas por distancia según el tipo y la categoría seleccionados
 if 'ubicacion_usuario' in st.session_state:
