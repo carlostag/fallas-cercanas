@@ -1,11 +1,9 @@
 import streamlit as st
 import pandas as pd
 from geopy.distance import geodesic
-from opencage.geocoder import OpenCageGeocode
 import folium
 from streamlit_folium import st_folium
 import openrouteservice
-from openrouteservice import convert
 
 # Función para encontrar la falla más cercana
 def falla_mas_cercana(data, ubicacion_usuario):
@@ -13,31 +11,13 @@ def falla_mas_cercana(data, ubicacion_usuario):
     falla_cercana = data.loc[data['distancia'].idxmin()]
     return falla_cercana
 
-# Función para cargar y procesar los datos, estandarizando nombres de columnas
+# Función para cargar y procesar los datos
 def cargar_datos(ruta, tipo_falla, columnas_renombrar):
     data = pd.read_csv(ruta, delimiter=';')
     data[['geo_point_2d_lat', 'geo_point_2d_lon']] = data['geo_point_2d'].str.split(',', expand=True).astype(float)
     data['Tipo Falla'] = tipo_falla
     data.rename(columns=columnas_renombrar, inplace=True)
     return data
-
-# Diccionarios para renombrar columnas
-columnas_renombrar_adultas = {
-    'Esbós / Lema': 'Esbos',
-    'Anyo Fundació / Año Fundacion': 'Any_Fundacio'
-}
-columnas_renombrar_infantiles = {
-    'Esbós / Boceto': 'Esbos',
-    'Any Fundació / Año Fundacion': 'Any_Fundacio'
-}
-
-# Cargar los datos
-data_fallas_adultas = cargar_datos("falles-fallas.csv", 'Falla Adulta', columnas_renombrar_adultas)
-data_fallas_infantiles = cargar_datos("falles-infantils-fallas-infantiles.csv", 'Falla Infantil', columnas_renombrar_infantiles)
-data_carpas_falleras = cargar_datos("carpes-falles-carpas-fallas.csv", 'Carpa Fallera', {})
-
-# Unir todas las bases de datos
-data = pd.concat([data_fallas_adultas, data_fallas_infantiles, data_carpas_falleras], ignore_index=True)
 
 # Función para calcular la ruta turística acumulando distancias
 def calcular_ruta_turistica(data, ubicacion_usuario, distancia_maxima, ors_client):
@@ -71,6 +51,62 @@ def obtener_ruta_con_calles(data, ubicacion_usuario, ors_client):
         format='geojson'
     )
     return ruta
+
+# Título de la aplicación
+st.title("Fallas Más Cercanas y Ruta Turística")
+
+# Cargar los datos
+data_fallas_adultas = cargar_datos("falles-fallas.csv", 'Falla Adulta', {})
+data_fallas_infantiles = cargar_datos("falles-infantils-fallas-infantiles.csv", 'Falla Infantil', {})
+data_carpas_falleras = cargar_datos("carpes-falles-carpas-fallas.csv", 'Carpa Fallera', {})
+
+# Unir todas las bases de datos
+data = pd.concat([data_fallas_adultas, data_fallas_infantiles, data_carpas_falleras], ignore_index=True)
+
+# Pedir la ubicación del usuario
+direccion = st.text_input("Introduce tu dirección")
+
+# Botón para buscar la falla más cercana
+if st.button("Buscar Falla Más Cercana"):
+    if direccion:
+        ubicacion_usuario = obtener_ubicacion(direccion)
+        if ubicacion_usuario:
+            falla_cercana = falla_mas_cercana(data, ubicacion_usuario)
+            st.write("Falla Más Cercana:")
+            st.write(falla_cercana)
+            st.map(falla_cercana[['geo_point_2d_lat', 'geo_point_2d_lon']])
+        else:
+            st.error("No se pudo encontrar la ubicación. Por favor, intenta de nuevo.")
+    else:
+        st.error("Por favor, introduce una dirección.")
+
+# Botón para calcular y mostrar la ruta turística
+if st.button("Calcular y Mostrar Ruta Turística"):
+    if direccion:
+        ubicacion_usuario = obtener_ubicacion(direccion)
+        if ubicacion_usuario:
+            # Crear cliente de OpenRouteService
+            ors_client = openrouteservice.Client(key='5b3ce3597851110001cf624898e24b3bf3774e8a92088a276b847d49')  # Reemplaza 'TU_API_KEY' con tu clave de OpenRouteService
+            
+            # Calcular la ruta turística
+            distancia_maxima = 10  # Distancia máxima en km
+            ruta_turistica = calcular_ruta_turistica(data, ubicacion_usuario, distancia_maxima, ors_client)
+            
+            # Obtener la ruta con calles reales
+            ruta_geojson = obtener_ruta_con_calles(ruta_turistica, ubicacion_usuario, ors_client)
+            
+            # Mostrar la ruta turística en el mapa
+            m = folium.Map(location=ubicacion_usuario, zoom_start=14)
+            folium.Marker([ubicacion_usuario[0], ubicacion_usuario[1]], popup="Tu Ubicación", icon=folium.Icon(color="blue")).add_to(m)
+            for index, row in ruta_turistica.iterrows():
+                folium.Marker([row['geo_point_2d_lat'], row['geo_point_2d_lon']], popup=row['Nom / Nombre']).add_to(m)
+            folium.GeoJson(ruta_geojson, name='route').add_to(m)
+            folium.LayerControl().add_to(m)
+            st_folium(m, width=700, height=500)
+        else:
+            st.error("No se pudo encontrar la ubicación. Por favor, intenta de nuevo.")
+    else:
+        st.error("Por favor, introduce una dirección.")
 
 # Título de la aplicación
 st.title("Fallas Más Cercanas y Ruta Turística")
