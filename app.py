@@ -56,7 +56,7 @@ def calcular_ruta_turistica(data, ubicacion_usuario, distancia_maxima, ors_clien
         falla['distancia_acumulada'] = distancia_acumulada
         ruta.append(falla)
         ubicacion_actual = (falla['geo_point_2d_lat'], falla['geo_point_2d_lon'])
-        pass
+        
     return pd.DataFrame(ruta)
 
 # Función para obtener la ruta con calles reales usando OpenRouteService
