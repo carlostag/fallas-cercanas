@@ -5,7 +5,6 @@ from opencage.geocoder import OpenCageGeocode
 import folium
 from streamlit_folium import st_folium
 import openrouteservice
-from openrouteservice import convert
 
 # Función para encontrar la falla más cercana
 def falla_mas_cercana(data, ubicacion_usuario):
@@ -39,40 +38,6 @@ data_carpas_falleras = cargar_datos("carpes-falles-carpas-fallas.csv", 'Carpa Fa
 # Unir todas las bases de datos
 data = pd.concat([data_fallas_adultas, data_fallas_infantiles, data_carpas_falleras], ignore_index=True)
 
-# Función para calcular la ruta turística acumulando distancias
-def calcular_ruta_turistica(data, ubicacion_usuario, distancia_maxima, ors_client):
-    data['distancia'] = data.apply(lambda row: geodesic(ubicacion_usuario, (row['geo_point_2d_lat'], row['geo_point_2d_lon'])).km, axis=1)
-    fallas_cercanas = data.sort_values(by='distancia')
-    
-    ruta = []
-    distancia_acumulada = 0.0
-    ubicacion_actual = ubicacion_usuario
-
-    for _, falla in fallas_cercanas.iterrows():
-        distancia_a_falla = geodesic(ubicacion_actual, (falla['geo_point_2d_lat'], falla['geo_point_2d_lon'])).km
-        if distancia_acumulada + distancia_a_falla > distancia_maxima:
-            break
-        distancia_acumulada += distancia_a_falla
-        falla['distancia_acumulada'] = distancia_acumulada
-        ruta.append(falla)
-        ubicacion_actual = (falla['geo_point_2d_lat'], falla['geo_point_2d_lon'])
-        
-    return pd.DataFrame(ruta)
-'''
-    
-# Función para obtener la ruta con calles reales usando OpenRouteService
-def obtener_ruta_con_calles(data, ubicacion_usuario, ors_client):
-    coordenadas = [(ubicacion_usuario[1], ubicacion_usuario[0])]  # ORS usa (lon, lat)
-    for index, row in data.iterrows():
-        coordenadas.append((row['geo_point_2d_lon'], row['geo_point_2d_lat']))
-        
-    ruta = ors_client.directions(
-        coordinates=coordenadas,
-        profile='foot-walking',
-        format='geojson'
-    )
-    return ruta
-'''
 # Título de la aplicación
 st.title("Fallas Más Cercanas y Ruta Turística")
 
@@ -113,24 +78,6 @@ if st.sidebar.button("Buscar Falla Más Cercana"):
             falla_cercana = falla_mas_cercana(data_filtrada, ubicacion_usuario)
             # Guardar la información de la falla más cercana en session_state
             st.session_state['falla_cercana'] = falla_cercana
-            st.session_state['ubicacion_usuario'] = ubicacion_usuario
-            st.session_state['direccion'] = direccion
-        else:
-            st.error("No se pudo encontrar la ubicación. Por favor, intenta de nuevo.")
-    else:
-        st.error("Por favor, introduce una dirección.")
-
-# Calcular la ruta turística cuando se hace clic en el botón
-if st.sidebar.button("Calcular Ruta Turística"):
-    if direccion:
-        geocoder = OpenCageGeocode('763ed800dfa0492ebffca31d51cf54a4')  # Reemplaza 'TU_API_KEY' con tu clave de OpenCageGeocode
-        results = geocoder.geocode(direccion)
-        if results:
-            lat, lon = results[0]['geometry']['lat'], results[0]['geometry']['lng']
-            ubicacion_usuario = (float(lat), float(lon))
-            ruta_turistica = calcular_ruta_turistica(data_filtrada, ubicacion_usuario, distancia_maxima, ors_client)
-            # Guardar la información de la ruta turística en session_state
-            st.session_state['ruta_turistica'] = ruta_turistica
             st.session_state['ubicacion_usuario'] = ubicacion_usuario
             st.session_state['direccion'] = direccion
         else:
