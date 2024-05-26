@@ -30,9 +30,9 @@ columnas_renombrar_infantiles = {
 }
 
 # Cargar los datos
-data_fallas_adultas = cargar_datos("D:/culo/falles-fallas.csv", 'Falla Adulta', columnas_renombrar_adultas)
-data_fallas_infantiles = cargar_datos("D:/culo/falles-infantils-fallas-infantiles.csv", 'Falla Infantil', columnas_renombrar_infantiles)
-data_carpas_falleras = cargar_datos("D:/culo/carpes-falles-carpas-fallas.csv", 'Carpa Fallera', {})
+data_fallas_adultas = cargar_datos("falles-fallas.csv", 'Falla Adulta', columnas_renombrar_adultas)
+data_fallas_infantiles = cargar_datos("falles-infantils-fallas-infantiles.csv", 'Falla Infantil', columnas_renombrar_infantiles)
+data_carpas_falleras = cargar_datos("carpes-falles-carpas-fallas.csv", 'Carpa Fallera', {})
 
 # Unir todas las bases de datos
 data = pd.concat([data_fallas_adultas, data_fallas_infantiles, data_carpas_falleras], ignore_index=True)
@@ -50,8 +50,9 @@ def calcular_ruta_turistica(data, ubicacion_usuario, distancia_maxima):
         distancia_a_falla = geodesic(ubicacion_actual, (falla['geo_point_2d_lat'], falla['geo_point_2d_lon'])).km
         if distancia_acumulada + distancia_a_falla > distancia_maxima:
             break
-        ruta.append(falla)
         distancia_acumulada += distancia_a_falla
+        falla['distancia_acumulada'] = distancia_acumulada
+        ruta.append(falla)
         ubicacion_actual = (falla['geo_point_2d_lat'], falla['geo_point_2d_lon'])
 
     return pd.DataFrame(ruta)
@@ -153,12 +154,12 @@ if 'ruta_turistica' in st.session_state:
     ubicacion_usuario = st.session_state['ubicacion_usuario']
     with st.expander("Ruta Turística", expanded=True):
         st.write("Fallas en la ruta:")
-        st.dataframe(ruta_turistica[['Nom / Nombre', 'distancia']])
+        st.dataframe(ruta_turistica[['Nom / Nombre', 'distancia_acumulada']])
         
         # Mostrar mapa con la ruta
         m = folium.Map(location=ubicacion_usuario, zoom_start=14)
         folium.Marker([ubicacion_usuario[0], ubicacion_usuario[1]], popup="Tu Ubicación", icon=folium.Icon(color="blue")).add_to(m)
-        ruta_coords = []
+        ruta_coords = [ubicacion_usuario]
         for index, row in ruta_turistica.iterrows():
             folium.Marker([row['geo_point_2d_lat'], row['geo_point_2d_lon']], popup=row['Nom / Nombre']).add_to(m)
             ruta_coords.append((row['geo_point_2d_lat'], row['geo_point_2d_lon']))
