@@ -38,7 +38,7 @@ data_carpas_falleras = cargar_datos("carpes-falles-carpas-fallas.csv", 'Carpa Fa
 
 # Unir todas las bases de datos
 data = pd.concat([data_fallas_adultas, data_fallas_infantiles, data_carpas_falleras], ignore_index=True)
-
+'''
 # Función para calcular la ruta turística acumulando distancias
 def calcular_ruta_turistica(data, ubicacion_usuario, distancia_maxima, ors_client):
     data['distancia'] = data.apply(lambda row: geodesic(ubicacion_usuario, (row['geo_point_2d_lat'], row['geo_point_2d_lon'])).km, axis=1)
@@ -58,7 +58,8 @@ def calcular_ruta_turistica(data, ubicacion_usuario, distancia_maxima, ors_clien
         ubicacion_actual = (falla['geo_point_2d_lat'], falla['geo_point_2d_lon'])
         
     return pd.DataFrame(ruta)
-
+'''
+    
 # Función para obtener la ruta con calles reales usando OpenRouteService
 def obtener_ruta_con_calles(data, ubicacion_usuario, ors_client):
     coordenadas = [(ubicacion_usuario[1], ubicacion_usuario[0])]  # ORS usa (lon, lat)
