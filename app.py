@@ -5,6 +5,8 @@ from opencage.geocoder import OpenCageGeocode
 import folium
 from streamlit_folium import st_folium
 import openrouteservice
+from openrouteservice import convert
+import base64
 
 # Función para encontrar la falla más cercana
 def falla_mas_cercana(data, ubicacion_usuario):
@@ -113,11 +115,6 @@ if st.sidebar.button("Buscar Falla Más Cercana"):
             st.session_state['falla_cercana'] = falla_cercana
             st.session_state['ubicacion_usuario'] = ubicacion_usuario
             st.session_state['direccion'] = direccion
-            # Limpiar la información de la ruta turística
-            if 'ruta_turistica' in st.session_state:
-                del st.session_state['ruta_turistica']
-            if 'ruta_geojson' in st.session_state:
-                del st.session_state['ruta_geojson']
         else:
             st.error("No se pudo encontrar la ubicación. Por favor, intenta de nuevo.")
     else:
@@ -139,9 +136,6 @@ if st.sidebar.button("Calcular Ruta Turística"):
             # Obtener la ruta con calles reales
             ruta_geojson = obtener_ruta_con_calles(ruta_turistica, ubicacion_usuario, ors_client)
             st.session_state['ruta_geojson'] = ruta_geojson
-            # Limpiar la información de la falla más cercana
-            if 'falla_cercana' in st.session_state:
-                del st.session_state['falla_cercana']
         else:
             st.error("No se pudo encontrar la ubicación. Por favor, intenta de nuevo.")
     else:
@@ -154,8 +148,8 @@ if 'falla_cercana' in st.session_state:
     with st.expander("Falla Más Cercana", expanded=True):
         if falla_cercana['Tipo Falla'] == 'Carpa Fallera':
             # Obtener el nombre de la falla a la que pertenece la carpa
-            id_falla = falla_cercana['Id. Falla']  # Ajustar este campo al nombre correcto del ID de la falla en el DataFrame
-            nombre_falla = data[data['Id. Falla'] == id_falla]['Nom / Nombre'].values[0]  # Ajustar el nombre del campo
+            id_falla = falla_cercana['Id. Falla']  # Ajustar este campo al nombre correcto del ID
+            nombre_falla = data_fallas_adultas.loc[data_fallas_adultas['Id. Falla'] == id_falla, 'Nom / Nombre'].values[0]  # Ajustar el nombre del campo ID si es diferente
             st.write(f"Nombre de la Carpa: {nombre_falla}")
             st.write(f"Tipo: {falla_cercana['Tipo Falla']}")
             st.write(f"Dirección: {falla_cercana['Adreça / Dirección']}")
