@@ -194,6 +194,7 @@ if 'ruta_turistica' in st.session_state:
         folium.GeoJson(ruta_geojson, name='route').add_to(m)
         folium.LayerControl().add_to(m)
         st_folium(m, width=700, height=500)
+        pass
 
 # Mostrar lista de fallas ordenadas por distancia según el tipo y la categoría seleccionados
 if 'ubicacion_usuario' in st.session_state:
