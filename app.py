@@ -191,7 +191,7 @@ if 'ruta_turistica' in st.session_state:
         for index, row in ruta_turistica.iterrows():
             folium.Marker([row['geo_point_2d_lat'], row['geo_point_2d_lon']], popup=row['Nom / Nombre']).add_to(m)
         folium.GeoJson(ruta_geojson, name='route').add_to(m)
-        folium.LayerControl().add_to(m)
+        #folium.LayerControl().add_to(m)
         st_folium(m, width=700, height=500)
         
 
