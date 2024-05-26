@@ -177,22 +177,22 @@ if 'falla_cercana' in st.session_state:
 if 'ruta_turistica' in st.session_state:
     ruta_turistica = st.session_state['ruta_turistica']
     ubicacion_usuario = st.session_state['ubicacion_usuario']
-    with st.expander("Ruta Turística", expanded=True):
-        st.write("Fallas en la ruta:")
-        st.dataframe(ruta_turistica[['Nom / Nombre', 'distancia_acumulada']])
-        
-        # Obtener la ruta con calles reales
-        ruta_geojson = obtener_ruta_con_calles(ruta_turistica, ubicacion_usuario, ors_client)
-        
-        # Mostrar mapa con la ruta
-        m = folium.Map(location=ubicacion_usuario, zoom_start=14)
-        folium.Marker([ubicacion_usuario[0], ubicacion_usuario[1]], popup="Tu Ubicación", icon=folium.Icon(color="blue")).add_to(m)
-        
-        for index, row in ruta_turistica.iterrows():
-            folium.Marker([row['geo_point_2d_lat'], row['geo_point_2d_lon']], popup=row['Nom / Nombre']).add_to(m)
-        #folium.GeoJson(ruta_geojson, name='route').add_to(m)
-        folium.LayerControl().add_to(m)
-        st_folium(m, width=700, height=500)
+    #with st.expander("Ruta Turística", expanded=True):
+    st.write("Fallas en la ruta:")
+    st.dataframe(ruta_turistica[['Nom / Nombre', 'distancia_acumulada']])
+    
+    # Obtener la ruta con calles reales
+    ruta_geojson = obtener_ruta_con_calles(ruta_turistica, ubicacion_usuario, ors_client)
+    
+    # Mostrar mapa con la ruta
+    m = folium.Map(location=ubicacion_usuario, zoom_start=14)
+    folium.Marker([ubicacion_usuario[0], ubicacion_usuario[1]], popup="Tu Ubicación", icon=folium.Icon(color="blue")).add_to(m)
+    
+    for index, row in ruta_turistica.iterrows():
+        folium.Marker([row['geo_point_2d_lat'], row['geo_point_2d_lon']], popup=row['Nom / Nombre']).add_to(m)
+    folium.GeoJson(ruta_geojson, name='route').add_to(m)
+    folium.LayerControl().add_to(m)
+    st_folium(m, width=700, height=500)
         
 
 # Mostrar lista de fallas ordenadas por distancia según el tipo y la categoría seleccionados
