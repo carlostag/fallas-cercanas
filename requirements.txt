@@ -4,3 +4,4 @@ geopy==2.2.0
 opencage==2.0.0
 folium==0.14.0
 streamlit-folium==0.13.0
+openrouteservice
