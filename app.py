@@ -85,6 +85,24 @@ if st.sidebar.button("Buscar Falla Más Cercana"):
     else:
         st.error("Por favor, introduce una dirección.")
 
+# Calcular la ruta turística cuando se hace clic en el botón
+if st.sidebar.button("Calcular Ruta Turística"):
+    if direccion:
+        geocoder = OpenCageGeocode('763ed800dfa0492ebffca31d51cf54a4')  # Reemplaza 'TU_API_KEY' con tu clave de OpenCageGeocode
+        results = geocoder.geocode(direccion)
+        if results:
+            lat, lon = results[0]['geometry']['lat'], results[0]['geometry']['lng']
+            ubicacion_usuario = (float(lat), float(lon))
+            ruta_turistica = calcular_ruta_turistica(data_filtrada, ubicacion_usuario, distancia_maxima, ors_client)
+            # Guardar la información de la ruta turística en session_state
+            st.session_state['ruta_turistica'] = ruta_turistica
+            st.session_state['ubicacion_usuario'] = ubicacion_usuario
+            st.session_state['direccion'] = direccion
+        else:
+            st.error("No se pudo encontrar la ubicación. Por favor, intenta de nuevo.")
+    else:
+        st.error("Por favor, introduce una dirección.")
+
 # Mostrar resultados si hay una falla cercana guardada en session_state
 if 'falla_cercana' in st.session_state:
     falla_cercana = st.session_state['falla_cercana']
