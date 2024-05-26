@@ -67,10 +67,18 @@ direccion = st.sidebar.text_input("Introduce tu dirección")
 # Seleccionar tipo de falla
 tipo_falla_seleccionada = st.sidebar.selectbox("Selecciona el tipo de falla", ['Todas', 'Falla Adulta', 'Falla Infantil', 'Carpa Fallera'])
 
+# Seleccionar categoría de falla
+categorias_falla = data['Secció / Seccion'].unique()
+categoria_seleccionada = st.sidebar.selectbox("Selecciona la categoría de falla", ['Todas'] + list(categorias_falla))
+
 # Filtrar los datos según el tipo de falla seleccionado
 data_filtrada = data
 if tipo_falla_seleccionada != 'Todas':
     data_filtrada = data[data['Tipo Falla'] == tipo_falla_seleccionada]
+
+# Filtrar los datos según la categoría seleccionada
+if categoria_seleccionada != 'Todas':
+    data_filtrada = data_filtrada[data_filtrada['Secció / Seccion'] == categoria_seleccionada]
 
 # Distancia máxima para la ruta turística
 distancia_maxima = st.sidebar.number_input("Introduce la distancia máxima (km) para la ruta turística", min_value=0.0, step=1.0)
@@ -166,7 +174,7 @@ if 'ruta_turistica' in st.session_state:
         folium.PolyLine(ruta_coords, color="red", weight=2.5, opacity=1).add_to(m)
         st_folium(m, width=700, height=500)
 
-# Mostrar lista de fallas ordenadas por distancia según el tipo seleccionado
+# Mostrar lista de fallas ordenadas por distancia según el tipo y la categoría seleccionados
 if 'ubicacion_usuario' in st.session_state:
     ubicacion_usuario = st.session_state['ubicacion_usuario']
     data_filtrada['distancia'] = data_filtrada.apply(lambda row: geodesic(ubicacion_usuario, (row['geo_point_2d_lat'], row['geo_point_2d_lon'])).km, axis=1)
