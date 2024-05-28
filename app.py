@@ -31,9 +31,15 @@ columnas_renombrar_infantiles = {
 }
 
 # Cargar los datos
-data_fallas_adultas = cargar_datos("falles-fallas.csv", 'Falla Adulta', columnas_renombrar_adultas)
-data_fallas_infantiles = cargar_datos("falles-infantils-fallas-infantiles.csv", 'Falla Infantil', columnas_renombrar_infantiles)
-data_carpas_falleras = cargar_datos("carpes-falles-carpas-fallas.csv", 'Carpa Fallera', {})
+data_fallas_adultas = cargar_datos("D:/culo/falles-fallas.csv", 'Falla Adulta', columnas_renombrar_adultas)
+data_fallas_infantiles = cargar_datos("D:/culo/falles-infantils-fallas-infantiles.csv", 'Falla Infantil', columnas_renombrar_infantiles)
+data_carpas_falleras = cargar_datos("D:/culo/carpes-falles-carpas-fallas.csv", 'Carpa Fallera', {})
+
+# Concatenar las fallas adultas e infantiles para obtener nombres de fallas de carpas
+data_fallas = pd.concat([data_fallas_adultas, data_fallas_infantiles], ignore_index=True)
+
+# Añadir nombres de fallas a las carpas falleras
+data_carpas_falleras = data_carpas_falleras.merge(data_fallas_adultas[['Id. Falla', 'Nom / Nombre']], on='Id. Falla', how='left')
 
 # Unir todas las bases de datos
 data = pd.concat([data_fallas_adultas, data_fallas_infantiles, data_carpas_falleras], ignore_index=True)
@@ -72,132 +78,147 @@ def obtener_ruta_con_calles(data, ubicacion_usuario, ors_client):
     return ruta
 
 # Título de la aplicación
-st.title("Fallas Más Cercanas y Ruta Turística")
-
-# Pedir la ubicación del usuario
-st.sidebar.header("Tu Ubicación")
-direccion = st.sidebar.text_input("Introduce tu dirección")
-
-# Seleccionar tipo de falla
-tipo_falla_seleccionada = st.sidebar.selectbox("Selecciona el tipo de falla", ['Todas', 'Falla Adulta', 'Falla Infantil', 'Carpa Fallera'])
-
-# Seleccionar categoría de falla
-categorias_falla = data['Secció / Seccion'].unique()
-categoria_seleccionada = st.sidebar.selectbox("Selecciona la categoría de falla", ['Todas'] + list(categorias_falla))
-
-# Filtrar los datos según el tipo de falla seleccionado
-data_filtrada = data
-if tipo_falla_seleccionada != 'Todas':
-    data_filtrada = data[data['Tipo Falla'] == tipo_falla_seleccionada]
-
-# Filtrar los datos según la categoría seleccionada
-if categoria_seleccionada != 'Todas':
-    data_filtrada = data_filtrada[data_filtrada['Secció / Seccion'] == categoria_seleccionada]
-
-# Distancia máxima para la ruta turística
-distancia_maxima = st.sidebar.number_input("Introduce la distancia máxima (km) para la ruta turística", min_value=0.0, step=1.0)
+st.title("Fallas de Valencia")
 
 # Crear cliente de OpenRouteService
 ors_client = openrouteservice.Client(key='5b3ce3597851110001cf624898e24b3bf3774e8a92088a276b847d49')  # Reemplaza '5b3ce3597851110001cf624898e24b3bf3774e8a92088a276b847d49' con tu clave de OpenRouteService
 
-# Buscar la falla más cercana cuando se hace clic en el botón
-if st.sidebar.button("Buscar Falla Más Cercana"):
-    if direccion:
-        geocoder = OpenCageGeocode('763ed800dfa0492ebffca31d51cf54a4')  # Reemplaza '763ed800dfa0492ebffca31d51cf54a4' con tu clave de OpenCageGeocode
-        results = geocoder.geocode(direccion)
-        if results:
-            lat, lon = results[0]['geometry']['lat'], results[0]['geometry']['lng']
-            ubicacion_usuario = (float(lat), float(lon))
-            falla_cercana = falla_mas_cercana(data_filtrada, ubicacion_usuario)
-            # Guardar la información de la falla más cercana en session_state
-            st.session_state['falla_cercana'] = falla_cercana
-            st.session_state['ubicacion_usuario'] = ubicacion_usuario
-            st.session_state['direccion'] = direccion
+# Barra lateral con las opciones para ir a cada sección
+seccion = st.sidebar.selectbox("Selecciona la sección", ["Buscar Falla Más Cercana", "Calcular Ruta Turística"])
+
+if seccion == "Buscar Falla Más Cercana":
+    st.header("Buscar Falla Más Cercana")
+
+    direccion = st.text_input("Introduce tu dirección")
+
+    tipo_falla_seleccionada = st.selectbox("Selecciona el tipo de falla", ['Todas', 'Falla Adulta', 'Falla Infantil', 'Carpa Fallera'])
+    
+    # Solo mostrar opción de categoría si no es Carpa Fallera
+    if tipo_falla_seleccionada != 'Carpa Fallera':
+        categoria_seleccionada = st.selectbox("Selecciona la categoría de falla", ['Todas'] + list(data['Secció / Seccion'].unique()))
+
+    # Filtrar los datos según el tipo de falla y la categoría seleccionados
+    data_filtrada = data
+    if tipo_falla_seleccionada != 'Todas':
+        data_filtrada = data[data['Tipo Falla'] == tipo_falla_seleccionada]
+    if tipo_falla_seleccionada != 'Carpa Fallera' and 'categoria_seleccionada' in locals() and categoria_seleccionada != 'Todas':
+        data_filtrada = data_filtrada[data_filtrada['Secció / Seccion'] == categoria_seleccionada]
+
+    if st.button("Buscar Falla Más Cercana"):
+        if direccion:
+            geocoder = OpenCageGeocode('763ed800dfa0492ebffca31d51cf54a4')  # Reemplaza '763ed800dfa0492ebffca31d51cf54a4' con tu clave de OpenCageGeocode
+            results = geocoder.geocode(direccion)
+            if results:
+                lat, lon = results[0]['geometry']['lat'], results[0]['geometry']['lng']
+                ubicacion_usuario = (float(lat), float(lon))
+                falla_cercana = falla_mas_cercana(data_filtrada, ubicacion_usuario)
+                # Guardar la información de la falla más cercana en session_state
+                st.session_state['falla_cercana'] = falla_cercana
+                st.session_state['ubicacion_usuario'] = ubicacion_usuario
+                st.session_state['direccion'] = direccion
+            else:
+                st.error("No se pudo encontrar la ubicación. Por favor, intenta de nuevo.")
         else:
-            st.error("No se pudo encontrar la ubicación. Por favor, intenta de nuevo.")
-    else:
-        st.error("Por favor, introduce una dirección.")
+            st.error("Por favor, introduce una dirección.")
 
-# Calcular la ruta turística cuando se hace clic en el botón
-if st.sidebar.button("Calcular Ruta Turística"):
-    if direccion:
-        geocoder = OpenCageGeocode('763ed800dfa0492ebffca31d51cf54a4')  # Reemplaza '763ed800dfa0492ebffca31d51cf54a4' con tu clave de OpenCageGeocode
-        results = geocoder.geocode(direccion)
-        if results:
-            lat, lon = results[0]['geometry']['lat'], results[0]['geometry']['lng']
-            ubicacion_usuario = (float(lat), float(lon))
-            ruta_turistica = calcular_ruta_turistica(data_filtrada, ubicacion_usuario, distancia_maxima, ors_client)
-            # Guardar la información de la ruta turística en session_state
-            st.session_state['ruta_turistica'] = ruta_turistica
-            st.session_state['ubicacion_usuario'] = ubicacion_usuario
-            st.session_state['direccion'] = direccion
-            # Obtener la ruta con calles reales
-            ruta_geojson = obtener_ruta_con_calles(ruta_turistica, ubicacion_usuario, ors_client)
-            st.session_state['ruta_geojson'] = ruta_geojson
+    if 'falla_cercana' in st.session_state:
+        falla_cercana = st.session_state['falla_cercana']
+        ubicacion_usuario = st.session_state['ubicacion_usuario']
+
+        with st.expander("Falla Más Cercana", expanded=True):
+            if falla_cercana['Tipo Falla'] == 'Carpa Fallera':
+                nombre_falla = falla_cercana['Nom / Nombre']
+                st.write(f"Nombre de la Carpa: {nombre_falla}")
+            else:
+                st.write(f"Nombre: {falla_cercana.get('Nom / Nombre', 'N/A')}")
+                st.write(f"Tipo: {falla_cercana.get('Tipo Falla', 'N/A')}")
+                st.write(f"Sección: {falla_cercana.get('Secció / Seccion', 'N/A')}")
+                if falla_cercana['Tipo Falla'] != 'Falla Infantil':
+                    any_fundacio = falla_cercana.get('Any_Fundacio', 'N/A')
+                    st.write(f"Año de Fundación: {int(any_fundacio) if pd.notna(any_fundacio) else 'N/A'}")
+                    st.write(f"Distintivo: {falla_cercana.get('Distintiu / Distintivo', 'N/A')}")
+                esbos_url = falla_cercana.get('Esbos', None)
+                if isinstance(esbos_url, str) and esbos_url.startswith("http"):
+                    st.image(esbos_url, caption="Esbós")
+
+        # Evitar que el mapa se actualice constantemente
+        if 'mapa_falla_cercana' not in st.session_state:
+            ruta_geojson = obtener_ruta_con_calles(pd.DataFrame([falla_cercana]), ubicacion_usuario, ors_client)
+            m = folium.Map(location=ubicacion_usuario, zoom_start=14)
+            folium.Marker([ubicacion_usuario[0], ubicacion_usuario[1]], popup="Tu Ubicación", icon=folium.Icon(color="blue")).add_to(m)
+            if falla_cercana['Tipo Falla'] == 'Carpa Fallera':
+                folium.Marker([falla_cercana['geo_point_2d_lat'], falla_cercana['geo_point_2d_lon']], popup=nombre_falla).add_to(m)
+            else:
+                folium.Marker([falla_cercana['geo_point_2d_lat'], falla_cercana['geo_point_2d_lon']], popup=falla_cercana['Nom / Nombre']).add_to(m)
+            folium.GeoJson(ruta_geojson, name='route').add_to(m)
+            folium.LayerControl().add_to(m)
+            st.session_state['mapa_falla_cercana'] = m
+
+        st_folium(st.session_state['mapa_falla_cercana'], width=700, height=500)
+
+elif seccion == "Calcular Ruta Turística":
+    st.header("Calcular Ruta Turística")
+
+    direccion = st.text_input("Introduce tu dirección")
+
+    tipo_falla_seleccionada = st.selectbox("Selecciona el tipo de falla", ['Todas', 'Falla Adulta', 'Falla Infantil', 'Carpa Fallera'])
+    
+    # Solo mostrar opción de categoría si no es Carpa Fallera
+    if tipo_falla_seleccionada != 'Carpa Fallera':
+        categoria_seleccionada = st.selectbox("Selecciona la categoría de falla", ['Todas'] + list(data['Secció / Seccion'].unique()))
+
+    distancia_maxima = st.number_input("Distancia máxima de la ruta (km)", min_value=1, value=5)
+
+    # Filtrar los datos según el tipo de falla y la categoría seleccionados
+    data_filtrada = data
+    if tipo_falla_seleccionada != 'Todas':
+        data_filtrada = data[data['Tipo Falla'] == tipo_falla_seleccionada]
+    if tipo_falla_seleccionada != 'Carpa Fallera' and 'categoria_seleccionada' in locals() and categoria_seleccionada != 'Todas':
+        data_filtrada = data_filtrada[data_filtrada['Secció / Seccion'] == categoria_seleccionada]
+
+    if st.button("Calcular Ruta Turística"):
+        if direccion:
+            geocoder = OpenCageGeocode('763ed800dfa0492ebffca31d51cf54a4')  # Reemplaza '763ed800dfa0492ebffca31d51cf54a4' con tu clave de OpenCageGeocode
+            results = geocoder.geocode(direccion)
+            if results:
+                lat, lon = results[0]['geometry']['lat'], results[0]['geometry']['lng']
+                ubicacion_usuario = (float(lat), float(lon))
+                ruta_turistica = calcular_ruta_turistica(data_filtrada, ubicacion_usuario, distancia_maxima, ors_client)
+                # Guardar la información de la ruta turística en session_state
+                st.session_state['ruta_turistica'] = ruta_turistica
+                st.session_state['ubicacion_usuario'] = ubicacion_usuario
+                st.session_state['direccion'] = direccion
+                # Obtener la ruta con calles reales
+                ruta_geojson = obtener_ruta_con_calles(ruta_turistica, ubicacion_usuario, ors_client)
+                st.session_state['ruta_geojson'] = ruta_geojson
+            else:
+                st.error("No se pudo encontrar la ubicación. Por favor, intenta de nuevo.")
         else:
-            st.error("No se pudo encontrar la ubicación. Por favor, intenta de nuevo.")
-    else:
-        st.error("Por favor, introduce una dirección.")
+            st.error("Por favor, introduce una dirección.")
 
-# Mostrar resultados si hay una falla cercana guardada en session_state
-if 'falla_cercana' in st.session_state:
-    falla_cercana = st.session_state['falla_cercana']
-    ubicacion_usuario = st.session_state['ubicacion_usuario']
-    with st.expander("Falla Más Cercana", expanded=True):
-        st.write(f"Columnas disponibles: {falla_cercana.index.tolist()}")
-        st.write(f"Nombre: {falla_cercana.get('Nom / Nombre', 'N/A')}")
-        st.write(f"Tipo: {falla_cercana.get('Tipo Falla', 'N/A')}")
-        st.write(f"Sección: {falla_cercana.get('Secció / Seccion', 'N/A')}")
-        any_fundacio = falla_cercana.get('Any_Fundacio', 'N/A')
-        st.write(f"Año de Fundación: {int(any_fundacio) if pd.notna(any_fundacio) else 'N/A'}")
-        st.write(f"Distintivo: {falla_cercana.get('Distintiu / Distintivo', 'N/A')}")
-        esbos_url = falla_cercana.get('Esbos', None)
-        if isinstance(esbos_url, str) and esbos_url.startswith("http"):
-            st.image(esbos_url, caption="Esbós / Boceto")
-        else:
-            st.write(f"Esbós: {'N/A' if not esbos_url else esbos_url}")
-        st.write(f"Falla Experimental: {'SI' if falla_cercana.get('Falla Experimental', 0) == 1 else 'NO'}")
+    if 'ruta_turistica' in st.session_state and 'ruta_geojson' in st.session_state:
+        ruta_turistica = st.session_state['ruta_turistica']
+        ruta_geojson = st.session_state['ruta_geojson']
+        ubicacion_usuario = st.session_state['ubicacion_usuario']
+        with st.expander("Ruta Turística", expanded=True):
+            st.write("Fallas en la ruta:")
+            # Excluir las columnas de año de fundación y distintivo para las fallas infantiles
+            columnas_mostrar = ['Nom / Nombre', 'distancia_acumulada']
+            if tipo_falla_seleccionada == 'Todas':
+                columnas_mostrar += ['Tipo Falla']
+            st.dataframe(ruta_turistica[columnas_mostrar])
+            
+            # Mostrar mapa con la ruta
+            m = folium.Map(location=ubicacion_usuario, zoom_start=14)
+            folium.Marker([ubicacion_usuario[0], ubicacion_usuario[1]], popup="Tu Ubicación", icon=folium.Icon(color="blue")).add_to(m)
 
-        # Mostrar mapa con la ubicación
-        m = folium.Map(location=ubicacion_usuario, zoom_start=14)
-        folium.Marker([ubicacion_usuario[0], ubicacion_usuario[1]], popup="Tu Ubicación", icon=folium.Icon(color="blue")).add_to(m)
-        folium.Marker([falla_cercana['geo_point_2d_lat'], falla_cercana['geo_point_2d_lon']], popup=falla_cercana.get('Nom / Nombre', 'Falla')).add_to(m)
-        st_folium(m, width=700, height=500)
+            for index, row in ruta_turistica.iterrows():
+                if row['Tipo Falla'] == 'Carpa Fallera':
+                    nombre_falla = row['Nom / Nombre']
+                    folium.Marker([row['geo_point_2d_lat'], row['geo_point_2d_lon']], popup=nombre_falla).add_to(m)
+                else:
+                    folium.Marker([row['geo_point_2d_lat'], row['geo_point_2d_lon']], popup=row['Nom / Nombre']).add_to(m)
 
-# Mostrar la ruta turística si hay una guardada en session_state
-if 'ruta_turistica' in st.session_state and 'ruta_geojson' in st.session_state:
-    ruta_turistica = st.session_state['ruta_turistica']
-    ruta_geojson = st.session_state['ruta_geojson']
-    ubicacion_usuario = st.session_state['ubicacion_usuario']
-    with st.expander("Ruta Turística", expanded=True):
-        st.write("Fallas en la ruta:")
-        st.dataframe(ruta_turistica[['Nom / Nombre', 'distancia_acumulada']])
-        
-        # Mostrar mapa con la ruta
-        m = folium.Map(location=ubicacion_usuario, zoom_start=14)
-        folium.Marker([ubicacion_usuario[0], ubicacion_usuario[1]], popup="Tu Ubicación", icon=folium.Icon(color="blue")).add_to(m)
-
-        for index, row in ruta_turistica.iterrows():
-            folium.Marker([row['geo_point_2d_lat'], row['geo_point_2d_lon']], popup=row['Nom / Nombre']).add_to(m)
-
-        folium.GeoJson(ruta_geojson, name='route').add_to(m)
-        folium.LayerControl().add_to(m)
-        st_folium(m, width=700, height=500)
-
-# Mostrar lista de fallas ordenadas por distancia según el tipo y la categoría seleccionados
-if 'ubicacion_usuario' in st.session_state:
-    ubicacion_usuario = st.session_state['ubicacion_usuario']
-    data_filtrada['distancia'] = data_filtrada.apply(lambda row: geodesic(ubicacion_usuario, (row['geo_point_2d_lat'], row['geo_point_2d_lon'])).km, axis=1)
-    data_filtrada = data_filtrada.sort_values(by='distancia')
-
-    # Mostrar las 5 fallas más cercanas en el mapa
-    st.header(f"Las 5 {tipo_falla_seleccionada.lower()}s más cercanas a ti")
-    m = folium.Map(location=ubicacion_usuario, zoom_start=14)
-    folium.Marker([ubicacion_usuario[0], ubicacion_usuario[1]], popup="Tu Ubicación", icon=folium.Icon(color="blue")).add_to(m)
-    for i, row in data_filtrada.head(5).iterrows():
-        folium.Marker([row['geo_point_2d_lat'], row['geo_point_2d_lon']], popup=row['Nom / Nombre'], icon=folium.Icon(color="red")).add_to(m)
-    st_folium(m, width=700, height=500)
-
-    # Mostrar la tabla de fallas ordenadas por distancia
-    st.header(f"Lista de {tipo_falla_seleccionada.lower()}s")
-    st.dataframe(data_filtrada[['Nom / Nombre', 'distancia']])
+            folium.GeoJson(ruta_geojson, name='route').add_to(m)
+            folium.LayerControl().add_to(m)
+            st_folium(m, width=700, height=500)
