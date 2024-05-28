@@ -5,8 +5,6 @@ from opencage.geocoder import OpenCageGeocode
 import folium
 from streamlit_folium import st_folium
 import openrouteservice
-from openrouteservice import convert
-import base64
 
 # Función para encontrar la falla más cercana
 def falla_mas_cercana(data, ubicacion_usuario):
@@ -123,7 +121,7 @@ if st.sidebar.button("Buscar Falla Más Cercana"):
 # Calcular la ruta turística cuando se hace clic en el botón
 if st.sidebar.button("Calcular Ruta Turística"):
     if direccion:
-        geocoder = OpenCageGeocode('763ed800dfa0492ebffca31d51cf54a4')  # Reemplaza 'TU_API_KEY' con tu clave de OpenCageGeocode
+        geocoder = OpenCageGeocode('TU_API_KEY')  # Reemplaza 'TU_API_KEY' con tu clave de OpenCageGeocode
         results = geocoder.geocode(direccion)
         if results:
             lat, lon = results[0]['geometry']['lat'], results[0]['geometry']['lng']
@@ -146,35 +144,29 @@ if 'falla_cercana' in st.session_state:
     falla_cercana = st.session_state['falla_cercana']
     ubicacion_usuario = st.session_state['ubicacion_usuario']
     with st.expander("Falla Más Cercana", expanded=True):
-        if falla_cercana['Tipo Falla'] == 'Carpa Fallera':
-            # Obtener el nombre de la falla a la que pertenece la carpa
-            id_falla = falla_cercana['Id. Falla']  # Ajustar este campo al nombre correcto del ID
-            nombre_falla = data_fallas_adultas.loc[data_fallas_adultas['Id. Falla'] == id_falla, 'Nom / Nombre'].values[0]  # Ajustar el nombre del campo ID si es diferente
-            st.write(f"Nombre de la Carpa: {nombre_falla}")
-            st.write(f"Tipo: {falla_cercana['Tipo Falla']}")
+        st.write(f"Columnas disponibles: {falla_cercana.index.tolist()}")
+        if 'Adreça / Dirección' in falla_cercana:
             st.write(f"Dirección: {falla_cercana['Adreça / Dirección']}")
-            st.write(f"Sección: {falla_cercana['Secció / Seccion']}")
-            any_fundacio = int(falla_cercana['Any_Fundacio']) if pd.notna(falla_cercana['Any_Fundacio']) else 'N/A'
-            st.write(f"Año de Fundación: {any_fundacio}")
         else:
-            st.write(f"Nombre: {falla_cercana['Nom / Nombre']}")
-            st.write(f"Tipo: {falla_cercana['Tipo Falla']}")
-            st.write(f"Dirección: {falla_cercana['Adreça / Dirección']}")
-            st.write(f"Sección: {falla_cercana['Secció / Seccion']}")
-            any_fundacio = int(falla_cercana['Any_Fundacio']) if pd.notna(falla_cercana['Any_Fundacio']) else 'N/A'
-            st.write(f"Año de Fundación: {any_fundacio}")
-            st.write(f"Distintivo: {falla_cercana['Distintiu / Distintivo']}")
-            esbos_url = falla_cercana['Esbos']
-            if isinstance(esbos_url, str) and esbos_url.startswith("http"):
-                st.image(esbos_url, caption="Esbós / Boceto")
-            else:
-                st.write(f"Esbós: {'N/A' if not esbos_url else esbos_url}")
-            st.write(f"Falla Experimental: {'SI' if falla_cercana['Falla Experimental'] == 1 else 'NO'}")
+            st.write("La columna 'Adreça / Dirección' no está disponible en los datos.")
+        
+        st.write(f"Nombre: {falla_cercana.get('Nom / Nombre', 'N/A')}")
+        st.write(f"Tipo: {falla_cercana.get('Tipo Falla', 'N/A')}")
+        st.write(f"Sección: {falla_cercana.get('Secció / Seccion', 'N/A')}")
+        any_fundacio = falla_cercana.get('Any_Fundacio', 'N/A')
+        st.write(f"Año de Fundación: {int(any_fundacio) if pd.notna(any_fundacio) else 'N/A'}")
+        st.write(f"Distintivo: {falla_cercana.get('Distintiu / Distintivo', 'N/A')}")
+        esbos_url = falla_cercana.get('Esbos', None)
+        if isinstance(esbos_url, str) and esbos_url.startswith("http"):
+            st.image(esbos_url, caption="Esbós / Boceto")
+        else:
+            st.write(f"Esbós: {'N/A' if not esbos_url else esbos_url}")
+        st.write(f"Falla Experimental: {'SI' if falla_cercana.get('Falla Experimental', 0) == 1 else 'NO'}")
 
         # Mostrar mapa con la ubicación
         m = folium.Map(location=ubicacion_usuario, zoom_start=14)
         folium.Marker([ubicacion_usuario[0], ubicacion_usuario[1]], popup="Tu Ubicación", icon=folium.Icon(color="blue")).add_to(m)
-        folium.Marker([falla_cercana['geo_point_2d_lat'], falla_cercana['geo_point_2d_lon']], popup=falla_cercana['Nom / Nombre']).add_to(m)
+        folium.Marker([falla_cercana['geo_point_2d_lat'], falla_cercana['geo_point_2d_lon']], popup=falla_cercana.get('Nom / Nombre', 'Falla')).add_to(m)
         st_folium(m, width=700, height=500)
 
 # Mostrar la ruta turística si hay una guardada en session_state
@@ -210,6 +202,11 @@ if 'ubicacion_usuario' in st.session_state:
     for i, row in data_filtrada.head(5).iterrows():
         folium.Marker([row['geo_point_2d_lat'], row['geo_point_2d_lon']], popup=row['Nom / Nombre'], icon=folium.Icon(color="red")).add_to(m)
     st_folium(m, width=700, height=500)
+
+    # Mostrar la tabla de fallas ordenadas por distancia
+    st.header(f"Lista de {tipo_falla_seleccionada.lower()}s")
+    st.dataframe(data_filtrada[['Nom / Nombre', 'distancia']])
+
 
     # Mostrar la tabla de fallas ordenadas por distancia
     st.header(f"Lista de {tipo_falla_seleccionada.lower()}s")
