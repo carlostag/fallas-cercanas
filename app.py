@@ -98,12 +98,12 @@ if categoria_seleccionada != 'Todas':
 distancia_maxima = st.sidebar.number_input("Introduce la distancia máxima (km) para la ruta turística", min_value=0.0, step=1.0)
 
 # Crear cliente de OpenRouteService
-ors_client = openrouteservice.Client(key='5b3ce3597851110001cf624898e24b3bf3774e8a92088a276b847d49')  # Reemplaza 'TU_API_KEY' con tu clave de OpenRouteService
+ors_client = openrouteservice.Client(key='5b3ce3597851110001cf624898e24b3bf3774e8a92088a276b847d49')  # Reemplaza '5b3ce3597851110001cf624898e24b3bf3774e8a92088a276b847d49' con tu clave de OpenRouteService
 
 # Buscar la falla más cercana cuando se hace clic en el botón
 if st.sidebar.button("Buscar Falla Más Cercana"):
     if direccion:
-        geocoder = OpenCageGeocode('763ed800dfa0492ebffca31d51cf54a4')  # Reemplaza 'TU_API_KEY' con tu clave de OpenCageGeocode
+        geocoder = OpenCageGeocode('763ed800dfa0492ebffca31d51cf54a4')  # Reemplaza '763ed800dfa0492ebffca31d51cf54a4' con tu clave de OpenCageGeocode
         results = geocoder.geocode(direccion)
         if results:
             lat, lon = results[0]['geometry']['lat'], results[0]['geometry']['lng']
@@ -121,7 +121,7 @@ if st.sidebar.button("Buscar Falla Más Cercana"):
 # Calcular la ruta turística cuando se hace clic en el botón
 if st.sidebar.button("Calcular Ruta Turística"):
     if direccion:
-        geocoder = OpenCageGeocode('TU_API_KEY')  # Reemplaza 'TU_API_KEY' con tu clave de OpenCageGeocode
+        geocoder = OpenCageGeocode('763ed800dfa0492ebffca31d51cf54a4')  # Reemplaza '763ed800dfa0492ebffca31d51cf54a4' con tu clave de OpenCageGeocode
         results = geocoder.geocode(direccion)
         if results:
             lat, lon = results[0]['geometry']['lat'], results[0]['geometry']['lng']
@@ -145,11 +145,6 @@ if 'falla_cercana' in st.session_state:
     ubicacion_usuario = st.session_state['ubicacion_usuario']
     with st.expander("Falla Más Cercana", expanded=True):
         st.write(f"Columnas disponibles: {falla_cercana.index.tolist()}")
-        if 'Adreça / Dirección' in falla_cercana:
-            st.write(f"Dirección: {falla_cercana['Adreça / Dirección']}")
-        else:
-            st.write("La columna 'Adreça / Dirección' no está disponible en los datos.")
-        
         st.write(f"Nombre: {falla_cercana.get('Nom / Nombre', 'N/A')}")
         st.write(f"Tipo: {falla_cercana.get('Tipo Falla', 'N/A')}")
         st.write(f"Sección: {falla_cercana.get('Secció / Seccion', 'N/A')}")
@@ -202,11 +197,6 @@ if 'ubicacion_usuario' in st.session_state:
     for i, row in data_filtrada.head(5).iterrows():
         folium.Marker([row['geo_point_2d_lat'], row['geo_point_2d_lon']], popup=row['Nom / Nombre'], icon=folium.Icon(color="red")).add_to(m)
     st_folium(m, width=700, height=500)
-
-    # Mostrar la tabla de fallas ordenadas por distancia
-    st.header(f"Lista de {tipo_falla_seleccionada.lower()}s")
-    st.dataframe(data_filtrada[['Nom / Nombre', 'distancia']])
-
 
     # Mostrar la tabla de fallas ordenadas por distancia
     st.header(f"Lista de {tipo_falla_seleccionada.lower()}s")
