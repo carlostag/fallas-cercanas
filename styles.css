@@ -1,24 +1,25 @@
 /* General */
 body {
-    background-color: #e9ecef;
+    background-color: #121212;
     font-family: 'Arial', sans-serif;
+    color: #e0e0e0;
 }
 
 .stApp {
-    background-color: #ffffff;
+    background-color: #1e1e1e;
     border-radius: 10px;
     padding: 20px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 /* Sidebar */
 .stSidebar {
-    background-color: #343a40;
-    color: #ffffff;
+    background-color: #2c2c2c;
+    color: #e0e0e0;
 }
 
 .stSidebar .stButton > button {
-    background-color: #007bff;
+    background-color: #4a90e2;
     color: #ffffff;
     border-radius: 5px;
     border: none;
@@ -26,41 +27,43 @@ body {
 }
 
 .stSidebar .stButton > button:hover {
-    background-color: #0056b3;
+    background-color: #357ab7;
 }
 
 /* Headers */
 h1, h2, h3, h4, h5, h6 {
-    color: #007bff;
+    color: #4a90e2;
     font-weight: bold;
 }
 
 /* Input Fields */
 .stTextInput > div > div > input,
 .stNumberInput > div > div > input {
-    background-color: #f8f9fa;
-    border: 1px solid #ced4da;
+    background-color: #2c2c2c;
+    border: 1px solid #444444;
     border-radius: 5px;
     padding: 10px;
+    color: #e0e0e0;
 }
 
 .stTextInput > div > div > input:focus,
 .stNumberInput > div > div > input:focus {
-    border-color: #80bdff;
-    box-shadow: 0 0 5px rgba(128, 189, 255, 0.5);
+    border-color: #4a90e2;
+    box-shadow: 0 0 5px rgba(74, 144, 226, 0.5);
 }
 
 /* Selectbox */
 .stSelectbox > div > div > div {
-    background-color: #f8f9fa;
-    border: 1px solid #ced4da;
+    background-color: #2c2c2c;
+    border: 1px solid #444444;
     border-radius: 5px;
     padding: 10px;
+    color: #e0e0e0;
 }
 
 /* Buttons */
 .stButton > button {
-    background-color: #007bff;
+    background-color: #4a90e2;
     color: #ffffff;
     border-radius: 5px;
     border: none;
@@ -69,25 +72,26 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .stButton > button:hover {
-    background-color: #0056b3;
+    background-color: #357ab7;
 }
 
 /* Dataframe */
 .css-1l4w6pd .e1ewe7hr3 {
-    background-color: #f8f9fa;
-    border: 1px solid #ced4da;
+    background-color: #2c2c2c;
+    border: 1px solid #444444;
     border-radius: 5px;
+    color: #e0e0e0;
 }
 
 .css-1l4w6pd .e1ewe7hr3 thead tr {
-    background-color: #007bff;
+    background-color: #4a90e2;
     color: #ffffff;
 }
 
 .css-1l4w6pd .e1ewe7hr3 tbody tr {
-    border-bottom: 1px solid #dee2e6;
+    border-bottom: 1px solid #444444;
 }
 
 .css-1l4w6pd .e1ewe7hr3 tbody tr:hover {
-    background-color: #e9ecef;
+    background-color: #3a3a3a;
 }
