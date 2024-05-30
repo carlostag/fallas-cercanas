@@ -7,6 +7,11 @@ import folium
 from streamlit_folium import st_folium
 import openrouteservice
 
+# Cargar el CSS desde un archivo
+with open("styles.css") as f:
+    css = f.read()
+    st.markdown(f'<style>{css}</style>', unsafe_allow_html=True)
+
 # Función para encontrar la falla más cercana
 def falla_mas_cercana(data, ubicacion_usuario):
     data['distancia'] = data.apply(lambda row: geodesic(ubicacion_usuario, (row['geo_point_2d_lat'], row['geo_point_2d_lon'])).km, axis=1)
