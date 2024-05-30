@@ -257,10 +257,3 @@ elif seccion == "Calcular Ruta Turística":
         ruta_turistica = st.session_state.ruta_turistica
         st.write("Ruta Turística Calculada:")
         st.dataframe(ruta_turistica[['Nom / Nombre', 'distancia_acumulada']])
-
-
-
-            st.write("Por favor, introduce una dirección.")
-    
-    if 'mapa_turistica' in st.session_state:
-        st_folium(st.session_state.mapa_turistica, width=700, height=500)
