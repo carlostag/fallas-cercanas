@@ -1,27 +1,93 @@
-/* styles.css */
+/* General */
 body {
-    background-color: #f0f2f6;
+    background-color: #e9ecef;
+    font-family: 'Arial', sans-serif;
 }
+
 .stApp {
     background-color: #ffffff;
     border-radius: 10px;
     padding: 20px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
+
+/* Sidebar */
 .stSidebar {
     background-color: #343a40;
     color: #ffffff;
 }
+
+.stSidebar .stButton > button {
+    background-color: #007bff;
+    color: #ffffff;
+    border-radius: 5px;
+    border: none;
+    margin-bottom: 10px;
+}
+
+.stSidebar .stButton > button:hover {
+    background-color: #0056b3;
+}
+
+/* Headers */
+h1, h2, h3, h4, h5, h6 {
+    color: #007bff;
+    font-weight: bold;
+}
+
+/* Input Fields */
+.stTextInput > div > div > input,
+.stNumberInput > div > div > input {
+    background-color: #f8f9fa;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    padding: 10px;
+}
+
+.stTextInput > div > div > input:focus,
+.stNumberInput > div > div > input:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 5px rgba(128, 189, 255, 0.5);
+}
+
+/* Selectbox */
+.stSelectbox > div > div > div {
+    background-color: #f8f9fa;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    padding: 10px;
+}
+
+/* Buttons */
 .stButton > button {
     background-color: #007bff;
     color: #ffffff;
     border-radius: 5px;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
 }
+
 .stButton > button:hover {
     background-color: #0056b3;
 }
-.stHeader {
-    font-size: 24px;
-    font-weight: bold;
-    color: #007bff;
+
+/* Dataframe */
+.css-1l4w6pd .e1ewe7hr3 {
+    background-color: #f8f9fa;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+}
+
+.css-1l4w6pd .e1ewe7hr3 thead tr {
+    background-color: #007bff;
+    color: #ffffff;
+}
+
+.css-1l4w6pd .e1ewe7hr3 tbody tr {
+    border-bottom: 1px solid #dee2e6;
+}
+
+.css-1l4w6pd .e1ewe7hr3 tbody tr:hover {
+    background-color: #e9ecef;
 }
