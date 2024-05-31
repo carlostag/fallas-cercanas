@@ -1,4 +1,5 @@
 
+
 import streamlit as st
 import pandas as pd
 from geopy.distance import geodesic
@@ -6,11 +7,6 @@ from opencage.geocoder import OpenCageGeocode
 import folium
 from streamlit_folium import st_folium
 import openrouteservice
-
-# Cargar el CSS desde un archivo
-with open("styles.css") as f:
-    css = f.read()
-    st.markdown(f'<style>{css}</style>', unsafe_allow_html=True)
 
 # Función para encontrar la falla más cercana
 def falla_mas_cercana(data, ubicacion_usuario):
@@ -78,6 +74,51 @@ def obtener_ruta_con_calles(coordenadas, ors_client):
         format='geojson'
     )
     return ruta
+
+# Estilos personalizados
+st.markdown("""
+    <style>
+        body {
+            background-color: #F8F8F8;
+            font-family: 'Arial', sans-serif;
+        }
+        .main {
+            background-color: #FFF;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .css-18e3th9 {
+            padding: 2rem 1rem;
+        }
+        .stButton>button {
+            background-color: #FF6347;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+        }
+        .stButton>button:hover {
+            background-color: #FF4500;
+        }
+        .stTextInput>div>input {
+            border-radius: 5px;
+            border: 1px solid #CCC;
+            padding: 0.5rem;
+        }
+        .stSelectbox>div>div {
+            border-radius: 5px;
+            border: 1px solid #CCC;
+        }
+        .stNumberInput>div>input {
+            border-radius: 5px;
+            border: 1px solid #CCC;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
 # Título de la aplicación
 st.title("Fallas de Valencia")
@@ -182,6 +223,8 @@ if seccion == "Buscar Falla Más Cercana":
             st.write(f"Artista: {falla_cercana['Artiste / Artista']}")
             st.write(f"Lema: {falla_cercana['Lema']}")
             st.image(falla_cercana['Esbos'], caption="Esbós")
+        elif falla_cercana['Tipo Falla'] == 'Carpa Fallera':
+            st.write(f"Nombre de la Falla de la Carpa: {falla_cercana['Nom / Nombre']}")
 
     if 'mapa' in st.session_state:
         st_folium(st.session_state.mapa, width=700, height=500)
@@ -247,6 +290,7 @@ elif seccion == "Calcular Ruta Turística":
                 
                 # Mostrar el mapa con la ruta turística
                 st.session_state.mapa_turistica = folium.Map(location=ubicacion_usuario, zoom_start=13)
+                folium.Marker(location=ubicacion_usuario, popup="Tu Ubicación", icon=folium.Icon(color='blue')).add_to(st.session_state.mapa_turistica)
                 folium.GeoJson(ruta_con_calles, name="Ruta").add_to(st.session_state.mapa_turistica)
                 for _, row in ruta_turistica.iterrows():
                     folium.Marker(location=[row['geo_point_2d_lat'], row['geo_point_2d_lon']], popup=row['Nom / Nombre'], icon=folium.Icon(color='red')).add_to(st.session_state.mapa_turistica)
