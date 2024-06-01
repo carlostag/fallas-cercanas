@@ -116,6 +116,10 @@ st.markdown("""
         .css-10trblm {
             color: #D14524;
         }
+        /* Añadir estilo para los textos de entrada */
+        .stTextInput div[data-baseweb='input'] > div {
+            color: #D14524;
+        }
     </style>
     """, 
     unsafe_allow_html=True
