@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 from geopy.distance import geodesic
@@ -32,9 +31,9 @@ columnas_renombrar_infantiles = {
 }
 
 # Cargar los datos
-data_fallas_adultas = cargar_datos("falles-fallas.csv", 'Falla Adulta', columnas_renombrar_adultas)
-data_fallas_infantiles = cargar_datos("falles-infantils-fallas-infantiles.csv", 'Falla Infantil', columnas_renombrar_infantiles)
-data_carpas_falleras = cargar_datos("carpes-falles-carpas-fallas.csv", 'Carpa Fallera', {})
+data_fallas_adultas = cargar_datos("D:/culo/falles-fallas.csv", 'Falla Adulta', columnas_renombrar_adultas)
+data_fallas_infantiles = cargar_datos("D:/culo/falles-infantils-fallas-infantiles.csv", 'Falla Infantil', columnas_renombrar_infantiles)
+data_carpas_falleras = cargar_datos("D:/culo/carpes-falles-carpas-fallas.csv", 'Carpa Fallera', {})
 
 # Concatenar las fallas adultas e infantiles para obtener nombres de fallas de carpas
 data_fallas = pd.concat([data_fallas_adultas, data_fallas_infantiles], ignore_index=True)
@@ -63,7 +62,12 @@ def calcular_ruta_turistica(data, ubicacion_usuario, distancia_maxima, ors_clien
         ruta.append(falla)
         ubicacion_actual = (falla['geo_point_2d_lat'], falla['geo_point_2d_lon'])
         
-    return pd.DataFrame(ruta)
+    if not ruta:
+        st.write("No hay rutas disponibles de ese tipo.")
+         # Devuelve un DataFrame vacío
+        
+    if ruta:
+        return pd.DataFrame(ruta)
 
 # Función para obtener la ruta con calles reales usando OpenRouteService
 def obtener_ruta_con_calles(coordenadas, ors_client):
@@ -247,79 +251,86 @@ if seccion == "Buscar Falla Más Cercana":
         st_folium(st.session_state.mapa, width=700, height=500)
 
 elif seccion == "Calcular Ruta Turística":
-    st.header("Calcular Ruta Turística")
-
-    direccion = st.text_input("Introduce tu dirección")
-    distancia_maxima = st.number_input("Introduce la distancia máxima de la ruta (km)", min_value=1.0, max_value=100.0, value=10.0, step=0.1)
-
-    tipo_falla_seleccionada = st.selectbox("Selecciona el tipo de falla", ['Todas', 'Falla Adulta', 'Falla Infantil', 'Carpa Fallera'])
-
-    # Mostrar categorías solo para el tipo de falla seleccionado
-    if tipo_falla_seleccionada == 'Falla Adulta':
-        categorias = sorted(data_fallas_adultas['Secció / Seccion'].astype(str).unique())
-    elif tipo_falla_seleccionada == 'Falla Infantil':
-        # Convertir todos los valores a str para evitar errores de comparación
-        categorias_infantiles = data_fallas_infantiles['Secció / Seccion'].astype(str).unique()
-        categorias_infantiles = [c for c in categorias_infantiles if c not in ['FC', 'IE']]  # Filtrar categorías incorrectas
-        
-        # Ordenar considerando números y cadenas
-        def sort_key(x):
-            try:
-                return int(x)
-            except ValueError:
-                return x
-        
-        categorias_infantiles = sorted(categorias_infantiles, key=lambda x: (not x.isdigit(), sort_key(x)))
-        categorias = categorias_infantiles
-    else:
-        categorias = sorted(data['Secció / Seccion'].astype(str).dropna().unique())
-
-    if tipo_falla_seleccionada != 'Carpa Fallera':
-        categoria_seleccionada = st.selectbox("Selecciona la categoría de falla", ['Todas'] + categorias)
-
-    # Filtrar los datos según el tipo de falla y la categoría seleccionados
-    data_filtrada = data
-    if tipo_falla_seleccionada != 'Todas':
-        data_filtrada = data[data['Tipo Falla'] == tipo_falla_seleccionada]
-    if tipo_falla_seleccionada != 'Carpa Fallera' and 'categoria_seleccionada' in locals() and categoria_seleccionada != 'Todas':
-        data_filtrada = data_filtrada[data_filtrada['Secció / Seccion'] == categoria_seleccionada]
-
-    if st.button("Calcular Ruta", key="boton_calcular_ruta"):
-        if direccion:
-            geocoder = OpenCageGeocode('763ed800dfa0492ebffca31d51cf54a4')  # Reemplaza '763ed800dfa0492ebffca31d51cf54a4' con tu clave de OpenCageGeocode
-            ubicacion = geocoder.geocode(direccion)
-            if ubicacion:
-                ubicacion_usuario = (ubicacion[0]['geometry']['lat'], ubicacion[0]['geometry']['lng'])
-                ruta_turistica = calcular_ruta_turistica(data_filtrada, ubicacion_usuario, distancia_maxima, ors_client)
-                
-                st.session_state.ruta_turistica = ruta_turistica
-                st.session_state.ubicacion_usuario = ubicacion_usuario
-                st.session_state.mostrar_ruta = True
-
-                st.write("Ruta Turística Calculada:")
-                st.dataframe(ruta_turistica[['Nom / Nombre', 'distancia_acumulada']])
-                
-                # Obtener la ruta con calles reales usando OpenRouteService
-                coordenadas = [(ubicacion_usuario[1], ubicacion_usuario[0])]
-                for _, row in ruta_turistica.iterrows():
-                    coordenadas.append((row['geo_point_2d_lon'], row['geo_point_2d_lat']))
-                ruta_con_calles = obtener_ruta_con_calles(coordenadas, ors_client)
-                
-                # Mostrar el mapa con la ruta turística
-                st.session_state.mapa_turistica = folium.Map(location=ubicacion_usuario, zoom_start=13)
-                folium.Marker(location=ubicacion_usuario, popup="Tu Ubicación", icon=folium.Icon(color='blue')).add_to(st.session_state.mapa_turistica)
-                folium.GeoJson(ruta_con_calles, name="Ruta").add_to(st.session_state.mapa_turistica)
-                for _, row in ruta_turistica.iterrows():
-                    folium.Marker(location=[row['geo_point_2d_lat'], row['geo_point_2d_lon']], popup=row['Nom / Nombre'], icon=folium.Icon(color='red')).add_to(st.session_state.mapa_turistica)
-            else:
-                st.write("Dirección no encontrada.")
-        else:
-            st.write("Por favor, introduce una dirección.")
+    try:
+        st.header("Calcular Ruta Turística")
     
-    if 'mapa_turistica' in st.session_state:
-        st_folium(st.session_state.mapa_turistica, width=700, height=500)
-
-    if 'mostrar_ruta' in st.session_state and st.session_state.mostrar_ruta:
-        ruta_turistica = st.session_state.ruta_turistica
-        st.write("Ruta Turística Calculada:")
-        st.dataframe(ruta_turistica[['Nom / Nombre', 'distancia_acumulada']])
+        direccion = st.text_input("Introduce tu dirección")
+        distancia_maxima = st.number_input("Introduce la distancia máxima de la ruta (km)", min_value=1.0, max_value=100.0, value=10.0, step=0.1)
+    
+        tipo_falla_seleccionada = st.selectbox("Selecciona el tipo de falla", ['Todas', 'Falla Adulta', 'Falla Infantil', 'Carpa Fallera'])
+    
+        # Mostrar categorías solo para el tipo de falla seleccionado
+        if tipo_falla_seleccionada == 'Falla Adulta':
+            categorias = sorted(data_fallas_adultas['Secció / Seccion'].astype(str).unique())
+        elif tipo_falla_seleccionada == 'Falla Infantil':
+            # Convertir todos los valores a str para evitar errores de comparación
+            categorias_infantiles = data_fallas_infantiles['Secció / Seccion'].astype(str).unique()
+            categorias_infantiles = [c for c in categorias_infantiles if c not in ['FC', 'IE']]  # Filtrar categorías incorrectas
+            
+            # Ordenar considerando números y cadenas
+            def sort_key(x):
+                try:
+                    return int(x)
+                except ValueError:
+                    return x
+            
+            categorias_infantiles = sorted(categorias_infantiles, key=lambda x: (not x.isdigit(), sort_key(x)))
+            categorias = categorias_infantiles
+        else:
+            categorias = sorted(data['Secció / Seccion'].astype(str).dropna().unique())
+    
+        if tipo_falla_seleccionada != 'Carpa Fallera':
+            categoria_seleccionada = st.selectbox("Selecciona la categoría de falla", ['Todas'] + categorias)
+    
+    
+        data_filtrada = data
+        if tipo_falla_seleccionada != 'Todas':
+            data_filtrada = data[data['Tipo Falla'] == tipo_falla_seleccionada]
+        if tipo_falla_seleccionada != 'Carpa Fallera' and 'categoria_seleccionada' in locals() and categoria_seleccionada != 'Todas':
+            data_filtrada = data_filtrada[data_filtrada['Secció / Seccion'] == categoria_seleccionada]
+    
+        
+        if st.button("Calcular Ruta", key="boton_calcular_ruta"):
+            if direccion:
+                geocoder = OpenCageGeocode('763ed800dfa0492ebffca31d51cf54a4')  # Reemplaza '763ed800dfa0492ebffca31d51cf54a4' con tu clave de OpenCageGeocode
+                ubicacion = geocoder.geocode(direccion)
+                if ubicacion:
+                    ubicacion_usuario = (ubicacion[0]['geometry']['lat'], ubicacion[0]['geometry']['lng'])
+                    ruta_turistica = calcular_ruta_turistica(data_filtrada, ubicacion_usuario, distancia_maxima, ors_client)
+                    
+                    st.session_state.ruta_turistica = ruta_turistica
+                    st.session_state.ubicacion_usuario = ubicacion_usuario
+                    st.session_state.mostrar_ruta = True
+                    
+                    
+    
+                    st.write("Ruta Turística Calculada:")
+                    st.dataframe(ruta_turistica[['Nom / Nombre', 'distancia_acumulada']])
+                    
+                    # Obtener la ruta con calles reales usando OpenRouteService
+                    coordenadas = [(ubicacion_usuario[1], ubicacion_usuario[0])]
+                    for _, row in ruta_turistica.iterrows():
+                        coordenadas.append((row['geo_point_2d_lon'], row['geo_point_2d_lat']))
+                    ruta_con_calles = obtener_ruta_con_calles(coordenadas, ors_client)
+                    
+                    # Mostrar el mapa con la ruta turística
+                    st.session_state.mapa_turistica = folium.Map(location=ubicacion_usuario, zoom_start=13)
+                    folium.Marker(location=ubicacion_usuario, popup="Tu Ubicación", icon=folium.Icon(color='blue')).add_to(st.session_state.mapa_turistica)
+                    folium.GeoJson(ruta_con_calles, name="Ruta").add_to(st.session_state.mapa_turistica)
+                    for _, row in ruta_turistica.iterrows():
+                        folium.Marker(location=[row['geo_point_2d_lat'], row['geo_point_2d_lon']], popup=row['Nom / Nombre'], icon=folium.Icon(color='red')).add_to(st.session_state.mapa_turistica)
+                else:
+                    st.write("Dirección no encontrada.")
+            else:
+                st.write("Por favor, introduce una dirección.")
+        
+        if 'mapa_turistica' in st.session_state:
+            st_folium(st.session_state.mapa_turistica, width=700, height=500)
+    
+        if 'mostrar_ruta' in st.session_state and st.session_state.mostrar_ruta:
+            ruta_turistica = st.session_state.ruta_turistica
+            st.write("Ruta Turística Calculada:")
+            st.dataframe(ruta_turistica[['Nom / Nombre', 'distancia_acumulada']])
+            
+    except:
+        print('No hay fallas que mostrar')
