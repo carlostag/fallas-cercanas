@@ -1,5 +1,4 @@
 
-
 import streamlit as st
 import pandas as pd
 from geopy.distance import geodesic
@@ -76,52 +75,54 @@ def obtener_ruta_con_calles(coordenadas, ors_client):
     return ruta
 
 # Estilos personalizados
+# Estilos personalizados
 st.markdown("""
     <style>
-        body {
-            background-color: #F8F8F8;
+        .main {
+            background-color: #FFF38E;
+            color: #333;
             font-family: 'Arial', sans-serif;
         }
-        .main {
-            background-color: #FFF;
-            padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        h1, h2, h3 {
+            text-align: center;
+            color: #D14524;
         }
-        .css-18e3th9 {
-            padding: 2rem 1rem;
-        }
-        .stButton>button {
-            background-color: #FF6347;
+        .stButton button {
+            background-color: #D14524;
             color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: background-color 0.3s ease;
+            border-radius: 10px;
         }
-        .stButton>button:hover {
-            background-color: #FF4500;
+        .stButton button:hover {
+            background-color: #FF6100;
+            color: white;
         }
-        .stTextInput>div>input {
+        .stSelectbox div[data-baseweb='select'] {
+            background-color: #B3E5FC;
             border-radius: 5px;
-            border: 1px solid #CCC;
-            padding: 0.5rem;
         }
-        .stSelectbox>div>div {
-            border-radius: 5px;
-            border: 1px solid #CCC;
+        .stSidebar .sidebar-content {
+            background-color: #B3E5FC !important;
+            color: #D14524;
         }
-        .stNumberInput>div>input {
-            border-radius: 5px;
-            border: 1px solid #CCC;
+        .sidebar .sidebar-content {
+            background-color: #B3E5FC;
+        }
+        .css-1d391kg p {
+            color: #D14524;
+        }
+        .css-1avcm0n {
+            color: #D14524;
+        }
+        .css-10trblm {
+            color: #D14524;
         }
     </style>
-""", unsafe_allow_html=True)
+    """, 
+    unsafe_allow_html=True
+)
 
 # Título de la aplicación
-st.title("Fallas de Valencia")
+st.title("FALL-ASS")
 
 # Crear cliente de OpenRouteService
 ors_client = openrouteservice.Client(key='5b3ce3597851110001cf624898e24b3bf3774e8a92088a276b847d49')  # Reemplaza '5b3ce3597851110001cf624898e24b3bf3774e8a92088a276b847d49' con tu clave de OpenRouteService
@@ -153,7 +154,7 @@ if seccion == "Buscar Falla Más Cercana":
         # Convertir todos los valores a str para evitar errores de comparación
         categorias_infantiles = data_fallas_infantiles['Secció / Seccion'].astype(str).unique()
         categorias_infantiles = [c for c in categorias_infantiles if c not in ['FC', 'IE']]  # Filtrar categorías incorrectas
-        
+        categorias_infantiles = list(categorias_infantiles) + ["FC", "IE"]
         # Ordenar considerando números y cadenas
         def sort_key(x):
             try:
