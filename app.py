@@ -75,7 +75,6 @@ def obtener_ruta_con_calles(coordenadas, ors_client):
     return ruta
 
 # Estilos personalizados
-# Estilos personalizados
 st.markdown("""
     <style>
         .main {
@@ -89,16 +88,17 @@ st.markdown("""
         }
         .stButton button {
             background-color: #D14524;
-            color: white;
+            color: white !important;
             border-radius: 10px;
         }
         .stButton button:hover {
             background-color: #FF6100;
-            color: white;
+            color: white !important;
         }
         .stSelectbox div[data-baseweb='select'] {
             background-color: #B3E5FC;
             border-radius: 5px;
+            color: #D14524 !important;
         }
         .stSidebar .sidebar-content {
             background-color: #B3E5FC !important;
@@ -107,23 +107,35 @@ st.markdown("""
         .sidebar .sidebar-content {
             background-color: #B3E5FC;
         }
-        .css-1d391kg p {
+        /* Estilos para todos los textos generados por Streamlit */
+        .stTextInput > label, .stTextArea > label, .stNumberInput > label, .stSelectbox > label, .stRadio > label, .stCheckbox > label, .stSlider > label, .stButton, .stMarkdown, .stDataFrame, .stTable, .stColorPicker > label, .stDateInput > label, .stFileUploader > label, .stJson, .stImage, .stVideo, .stAudio, .stProgress, .stExpander > label, .stVegaLiteChart, .stAltairChart, .stPlotlyChart, .stDeckGlJsonChart, .stGraphvizChart, .stTableChart, .stMapboxChart, .stPydeckChart, .stBokehChart, .stPyplot, .stGraphvizChart, .stGraphviz, .stDataFrameSelector, .stFileUploader > label, .stMetric, .stPlotly, .stDeckGl, .stDataFrame, .stArrowVegaLiteChart, .stArrow, .stArrowDataFrame, .stArrowTable, .stArrowChart, .stMetric, .stTabs > label {
             color: #D14524;
         }
-        .css-1avcm0n {
-            color: #D14524;
+        /* Estilos para los inputs y placeholders */
+        input[type="text"], input[type="email"], input[type="password"], input[type="number"], textarea {
+            color: #D14524 !important;
         }
-        .css-10trblm {
-            color: #D14524;
+        input::placeholder, textarea::placeholder {
+            color: #D14524 !important;
         }
-        /* Añadir estilo para los textos de entrada */
-        .stTextInput div[data-baseweb='input'] > div {
-            color: #D14524;
+        /* Estilos específicos para labels y select boxes */
+        .css-1cpxqw2, .css-1cpxqw2 p, .css-1cpxqw2 h3, .css-1cpxqw2 h4, .css-1cpxqw2 h5, .css-1cpxqw2 h6, .css-1cpxqw2 div, .css-1cpxqw2 span, .css-1cpxqw2 label {
+            color: #D14524 !important;
+        }
+        .css-1l02zno, .css-1l02zno p, .css-1l02zno h3, .css-1l02zno h4, .css-1l02zno h5, .css-1l02zno h6, .css-1l02zno div, .css-1l02zno span, .css-1l02zno label {
+            color: #D14524 !important;
+        }
+        .css-1d391kg p, .css-1d391kg, .css-1d391kg h3, .css-1d391kg h4, .css-1d391kg h5, .css-1d391kg h6, .css-1d391kg div, .css-1d391kg span, .css-1d391kg label {
+            color: #D14524 !important;
+        }
+        .css-1v0mbdj p, .css-1v0mbdj, .css-1v0mbdj h3, .css-1v0mbdj h4, .css-1v0mbdj h5, .css-1v0mbdj h6, .css-1v0mbdj div, .css-1v0mbdj span, .css-1v0mbdj label {
+            color: #D14524 !important;
         }
     </style>
     """, 
     unsafe_allow_html=True
 )
+
 
 # Título de la aplicación
 st.title("FALL-ASS")
