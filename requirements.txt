@@ -1,5 +1,5 @@
 streamlit==1.22.0
-pandas==2.0.2
+pandas==2.2.2
 geopy==2.2.0
 opencage==2.0.0
 folium==0.14.0
