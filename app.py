@@ -145,7 +145,7 @@ st.markdown("""
 st.title("FALL-ASS")
 
 # Crear cliente de OpenRouteService
-ors_client = openrouteservice.Client(key='5b3ce3597851110001cf624898e24b3bf3774e8a92088a276b847d49')  # Reemplaza '5b3ce3597851110001cf624898e24b3bf3774e8a92088a276b847d49' con tu clave de OpenRouteService
+ors_client = openrouteservice.Client(key='e256f53101904c0c9bfe31cd0001905c')  # Reemplaza '5b3ce3597851110001cf624898e24b3bf3774e8a92088a276b847d49' con tu clave de OpenRouteService
 
 # Botones de funcionalidad en el sidebar
 st.sidebar.header("Selecciona la funcionalidad")
