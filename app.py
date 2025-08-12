@@ -165,7 +165,7 @@ st.markdown("""
 st.title("FALL-ASS")
 
 # Crear cliente de OpenRouteService
-ors_client = openrouteservice.Client(key=os.getenv('5b3ce3597851110001cf624898e24b3bf3774e8a92088a276b847d49'))
+ors_client = openrouteservice.Client(key=os.getenv('5b3ce3597851110001cf62489a18989700751cf2a075157f7e6ec6dddc01fb125e4340e7a8512df8'))
 
 # Botones de funcionalidad en el sidebar
 st.sidebar.header("Selecciona la funcionalidad")
@@ -339,3 +339,4 @@ elif seccion == "Calcular Ruta Turística":
         ruta_turistica = st.session_state.ruta_turistica
         st.write("Ruta Turística Calculada:")
         st.dataframe(ruta_turistica[['Nom / Nombre', 'distancia_acumulada']])
+
